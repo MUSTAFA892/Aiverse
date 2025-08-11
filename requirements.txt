@@ -3,3 +3,4 @@ TTS>=0.22.0
 flask_cors
 google-generativeai
 python-dotenv
+Pillow
