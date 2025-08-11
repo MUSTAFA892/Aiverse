@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -21,43 +20,65 @@ const vibes = [
   { name: "Inspirational", color: "from-purple-500 to-pink-500", emoji: "✨" },
 ]
 
-const sampleCaptions = [
-  "Living my best life, one adventure at a time! ✨ What's your next adventure? #AdventureTime #LiveYourBestLife",
-  "Sometimes you need to step outside, get some air, and remind yourself of who you are and where you want to be 🌟 #Mindfulness #SelfCare",
-  "Coffee in hand, dreams in heart ☕️💫 Ready to conquer this beautiful day! #MondayMotivation #CoffeeLovers",
-]
-
-const musicSuggestions = [
-  { title: "Good 4 U", artist: "Olivia Rodrigo", genre: "Pop" },
-  { title: "Levitating", artist: "Dua Lipa", genre: "Dance Pop" },
-  { title: "Blinding Lights", artist: "The Weeknd", genre: "Synth Pop" },
-  { title: "Watermelon Sugar", artist: "Harry Styles", genre: "Pop Rock" },
-]
+const languages = ["English", "Tamil", "Hindi"]
 
 export default function InstagramCaptionPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [selectedVibe, setSelectedVibe] = useState<string>("")
   const [customPrompt, setCustomPrompt] = useState("")
+  const [captionLanguage, setCaptionLanguage] = useState<string>("English")
+  const [songLanguage, setSongLanguage] = useState<string>("English")
   const [generatedCaptions, setGeneratedCaptions] = useState<string[]>([])
+  const [musicSuggestions, setMusicSuggestions] = useState<{ title: string; artist: string; genre: string }[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [showMusicSuggestions, setShowMusicSuggestions] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { toast } = useToast()
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file (e.g., JPEG, PNG).",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB.",
+          variant: "destructive",
+        })
+        return
+      }
+
       const reader = new FileReader()
       reader.onload = (e) => {
-        setSelectedImage(e.target?.result as string)
+        const result = e.target?.result as string
+        setSelectedImage(result)
+        toast({
+          title: "Image uploaded",
+          description: "Your image has been uploaded successfully!",
+        })
+      }
+      reader.onerror = () => {
+        toast({
+          title: "Error",
+          description: "Failed to read the image file.",
+          variant: "destructive",
+        })
       }
       reader.readAsDataURL(file)
-
-      toast({
-        title: "Image uploaded",
-        description: "Your image has been uploaded successfully!",
-      })
     }
+  }
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click()
   }
 
   const generateCaptions = async () => {
@@ -72,51 +93,68 @@ export default function InstagramCaptionPage() {
 
     setIsGenerating(true)
     setShowMusicSuggestions(false)
+    setGeneratedCaptions([])
+    setMusicSuggestions([])
 
-    // Simulate AI caption generation
-    setTimeout(() => {
-      const vibeBasedCaptions = {
-        Motivational: [
-          "Every step forward is a step toward achieving something bigger and better than your current situation 💪 #MotivationMonday #GrowthMindset",
-          "The only impossible journey is the one you never begin ✨ Ready to start yours? #JourneyBegins #BelieveInYourself",
-          "Success isn't just about what you accomplish in your life, it's about what you inspire others to do 🌟 #Inspiration #Leadership",
-        ],
-        Funny: [
-          "When life gives you lemons, make lemonade. When life gives you Monday, make coffee ☕️😂 #MondayMood #CoffeeAddict",
-          "I'm not lazy, I'm on energy saving mode 😴⚡️ #LazyDay #EnergyConservation #Relatable",
-          "My bed and I have a special relationship. We're perfect for each other 🛏️💕 #BedTime #Comfort #Mood",
-        ],
-        Romantic: [
-          "In a world full of temporary things, you are a perpetual feeling 💕✨ #Love #Romance #Forever",
-          "You're the reason I look down at my phone and smile, then walk into a pole 😍📱 #LoveStruck #Romance #Clumsy",
-          "Every love story is beautiful, but ours is my favorite 💖 #LoveStory #Romance #Soulmate",
-        ],
-        Professional: [
-          "Excellence is not a skill, it's an attitude 💼✨ Bringing my A-game every single day #ProfessionalLife #Excellence #WorkEthic",
-          "Innovation distinguishes between a leader and a follower 🚀 #Innovation #Leadership #BusinessMindset",
-          "Success is where preparation and opportunity meet 📈 #Success #Preparation #Opportunity",
-        ],
-        Casual: [
-          "Just vibing and thriving 😎✨ Sometimes the best moments are the unplanned ones #Vibes #CasualLife #GoodTimes",
-          "Living for these simple moments 🌟 Life doesn't have to be perfect to be wonderful #SimpleJoys #Grateful #Life",
-          "Keeping it real, keeping it simple 💫 #KeepItReal #Authentic #SimpleLife",
-        ],
-        Inspirational: [
-          "Be yourself; everyone else is already taken ✨ Your uniqueness is your superpower #BeYourself #Authentic #Inspiration",
-          "The future belongs to those who believe in the beauty of their dreams 🌟 #Dreams #Future #Believe",
-          "You are never too old to set another goal or to dream a new dream 💫 #NewGoals #Dreams #NeverTooLate",
-        ],
+    try {
+      // Generate captions
+      const captionResponse = await fetch('http://localhost:5000/api/generate-captions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vibe: selectedVibe,
+          customPrompt,
+          imageData: selectedImage,
+          language: captionLanguage,
+        }),
+      })
+
+      if (!captionResponse.ok) {
+        throw new Error(`HTTP error! status: ${captionResponse.status}`)
       }
 
-      setGeneratedCaptions(vibeBasedCaptions[selectedVibe as keyof typeof vibeBasedCaptions] || sampleCaptions)
-      setIsGenerating(false)
+      const captionData = await captionResponse.json()
+      if (captionData.error) {
+        throw new Error(captionData.error)
+      }
+
+      setGeneratedCaptions(captionData.captions || [])
+
+      // Generate music suggestions
+      const musicResponse = await fetch('http://localhost:5000/api/music-suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vibe: selectedVibe,
+          language: songLanguage,
+        }),
+      })
+
+      if (!musicResponse.ok) {
+        throw new Error(`HTTP error! status: ${musicResponse.status}`)
+      }
+
+      const musicData = await musicResponse.json()
+      if (musicData.error) {
+        throw new Error(musicData.error)
+      }
+
+      setMusicSuggestions(musicData.musicSuggestions || [])
       setShowMusicSuggestions(true)
 
       toast({
         title: "Captions generated!",
-        description: "Your Instagram captions are ready to use.",
+        description: "Your Instagram captions and music suggestions are ready.",
       })
-    }, 2000)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to generate captions: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      })
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const copyCaption = (caption: string) => {
@@ -151,7 +189,7 @@ export default function InstagramCaptionPage() {
             </span>
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Upload your image, choose a vibe, and get AI-generated captions that boost engagement
+            Upload your image, choose a vibe and languages, and get AI-generated captions
           </p>
         </motion.div>
 
@@ -177,16 +215,29 @@ export default function InstagramCaptionPage() {
                   <div className="space-y-4">
                     <div className="relative aspect-square rounded-xl overflow-hidden">
                       <Image
-                        src={selectedImage || "/placeholder.svg"}
+                        src={selectedImage}
                         alt="Uploaded image"
                         fill
                         className="object-cover"
+                        onError={() => {
+                          toast({
+                            title: "Error",
+                            description: "Failed to load image preview.",
+                            variant: "destructive",
+                          })
+                          setSelectedImage(null)
+                        }}
                       />
                     </div>
                     <Button
                       variant="outline"
                       className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 bg-transparent"
-                      onClick={() => setSelectedImage(null)}
+                      onClick={() => {
+                        setSelectedImage(null)
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = ""
+                        }
+                      }}
                     >
                       Change Image
                     </Button>
@@ -201,9 +252,13 @@ export default function InstagramCaptionPage() {
                       onChange={handleImageUpload}
                       className="hidden"
                       id="image-upload"
+                      ref={fileInputRef}
                     />
                     <label htmlFor="image-upload">
-                      <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white cursor-pointer">
+                      <Button
+                        className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white cursor-pointer"
+                        onClick={triggerFileInput}
+                      >
                         <Upload className="w-4 h-4 mr-2" />
                         Choose Image
                       </Button>
@@ -214,7 +269,7 @@ export default function InstagramCaptionPage() {
             </Card>
           </motion.div>
 
-          {/* Vibe Selection Section */}
+          {/* Vibe and Language Selection Section */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -224,30 +279,61 @@ export default function InstagramCaptionPage() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-cyan-400" />
-                  Choose Your Vibe
+                  Choose Your Vibe and Languages
                 </CardTitle>
-                <CardDescription className="text-gray-400">Select the mood and tone for your caption</CardDescription>
+                <CardDescription className="text-gray-400">Select the mood, tone, and languages for your caption and music</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-3">
-                  {vibes.map((vibe) => (
-                    <button
-                      key={vibe.name}
-                      onClick={() => setSelectedVibe(vibe.name)}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                        selectedVibe === vibe.name
-                          ? "border-teal-500 bg-teal-500/10"
-                          : "border-gray-600 hover:border-gray-500 bg-gray-800/50"
-                      }`}
-                    >
-                      <div
-                        className={`w-8 h-8 rounded-lg bg-gradient-to-r ${vibe.color} flex items-center justify-center mx-auto mb-2`}
+                <div>
+                  <label className="text-sm font-medium text-gray-300 mb-2 block">Vibe</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {vibes.map((vibe) => (
+                      <button
+                        key={vibe.name}
+                        onClick={() => setSelectedVibe(vibe.name)}
+                        className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                          selectedVibe === vibe.name
+                            ? "border-teal-500 bg-teal-500/10"
+                            : "border-gray-600 hover:border-gray-500 bg-gray-800/50"
+                        }`}
                       >
-                        <span className="text-lg">{vibe.emoji}</span>
-                      </div>
-                      <p className="text-white font-medium text-sm">{vibe.name}</p>
-                    </button>
-                  ))}
+                        <div
+                          className={`w-8 h-8 rounded-lg bg-gradient-to-r ${vibe.color} flex items-center justify-center mx-auto mb-2`}
+                        >
+                          <span className="text-lg">{vibe.emoji}</span>
+                        </div>
+                        <p className="text-white font-medium text-sm">{vibe.name}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-300 mb-2 block">Caption Language</label>
+                  <select
+                    value={captionLanguage}
+                    onChange={(e) => setCaptionLanguage(e.target.value)}
+                    className="w-full bg-gray-800/50 border border-gray-600 text-white rounded-md px-3 py-2 focus:border-teal-500 focus:outline-none"
+                  >
+                    <option value="" disabled>Select language</option>
+                    {languages.map((lang) => (
+                      <option key={lang} value={lang}>{lang}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-300 mb-2 block">Song Language</label>
+                  <select
+                    value={songLanguage}
+                    onChange={(e) => setSongLanguage(e.target.value)}
+                    className="w-full bg-gray-800/50 border border-gray-600 text-white rounded-md px-3 py-2 focus:border-teal-500 focus:outline-none"
+                  >
+                    <option value="" disabled>Select language</option>
+                    {languages.map((lang) => (
+                      <option key={lang} value={lang}>{lang}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -308,7 +394,7 @@ export default function InstagramCaptionPage() {
                   </Button>
                 </div>
                 <CardDescription className="text-gray-300">
-                  AI-generated captions tailored to your image and vibe
+                  AI-generated captions tailored to your image and vibe in {captionLanguage}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -342,7 +428,7 @@ export default function InstagramCaptionPage() {
         )}
 
         {/* Music Suggestions */}
-        {showMusicSuggestions && (
+        {showMusicSuggestions && musicSuggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -355,7 +441,7 @@ export default function InstagramCaptionPage() {
                   Music Suggestions
                 </CardTitle>
                 <CardDescription className="text-gray-400">
-                  Perfect tracks to complement your {selectedVibe.toLowerCase()} post
+                  Perfect tracks to complement your {selectedVibe.toLowerCase()} post in {songLanguage}
                 </CardDescription>
               </CardHeader>
               <CardContent>
