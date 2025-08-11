@@ -61,8 +61,8 @@ export default function ContactPage() {
     try {
       // EmailJS configuration - you'll need to replace these with your actual IDs
       await emailjs.send(
-        "service_usgt9fv", // Replace with your EmailJS service ID
-        "template_hdzxvkq", // Replace with your EmailJS template ID
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
         {
           from_name: `${formData.firstName} ${formData.lastName}`,
           from_email: formData.email,
@@ -70,7 +70,7 @@ export default function ContactPage() {
           message: formData.message,
           to_name: "AIverse Team",
         },
-        "xYS3UFJPbLtmtExLL", // Replace with your EmailJS public key
+        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY! , 
       )
 
       toast({

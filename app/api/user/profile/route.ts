@@ -2,9 +2,8 @@ import { type NextRequest, NextResponse } from "next/server"
 import { MongoClient, ObjectId } from "mongodb"
 import jwt from "jsonwebtoken"
 
-const MONGO_URI =
-  "mongodb+srv://mustafatinwala6:mustafa5253TINWALA@learningmongo.lof7x.mongodb.net/?retryWrites=true&w=majority&appName=LearningMongo"
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
+const MONGO_URI = process.env.NEXT_PUBLIC_MONGO_URI!
+const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET || "your-secret-key"
 
 async function verifyToken(request: NextRequest) {
   const token = request.cookies.get("auth-token")?.value

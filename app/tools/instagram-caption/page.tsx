@@ -98,7 +98,7 @@ export default function InstagramCaptionPage() {
 
     try {
       // Generate captions
-      const captionResponse = await fetch('http://localhost:5000/api/generate-captions', {
+      const captionResponse = await fetch('http://localhost:4500/api/generate-captions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -121,7 +121,7 @@ export default function InstagramCaptionPage() {
       setGeneratedCaptions(captionData.captions || [])
 
       // Generate music suggestions
-      const musicResponse = await fetch('http://localhost:5000/api/music-suggestions', {
+      const musicResponse = await fetch(`${process.env.NEXT_PUBLIC_INSTAGRAM_CAPTION_URL}/api/music-suggestions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
