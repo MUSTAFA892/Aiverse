@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Menu, X, Sparkles, User, Settings, LogOut, CreditCard } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -25,7 +26,7 @@ const navItems = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-  const [user, setUser] = useState<any>(null) // This would come from your auth context
+  const { user, logout } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,6 +35,11 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  const handleLogout = () => {
+    logout()
+    setIsOpen(false)
+  }
 
   return (
     <motion.nav
@@ -91,9 +97,11 @@ export default function Navbar() {
                     </div>
                   </div>
                   <DropdownMenuSeparator className="bg-gray-700" />
-                  <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-gray-800">
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
+                  <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-gray-800" asChild>
+                    <Link href="/profile">
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-gray-800">
                     <CreditCard className="mr-2 h-4 w-4" />
@@ -104,7 +112,10 @@ export default function Navbar() {
                     Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-gray-700" />
-                  <DropdownMenuItem className="text-red-400 hover:text-red-300 hover:bg-red-900/20">
+                  <DropdownMenuItem
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                    onClick={handleLogout}
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </DropdownMenuItem>
@@ -112,12 +123,16 @@ export default function Navbar() {
               </DropdownMenu>
             ) : (
               <>
-                <Button variant="ghost" className="text-gray-300 hover:text-teal-400 hover:bg-teal-500/10">
-                  Sign In
-                </Button>
-                <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white rounded-xl px-6">
-                  Get Started
-                </Button>
+                <Link href="/auth/login">
+                  <Button variant="ghost" className="text-gray-300 hover:text-teal-400 hover:bg-teal-500/10">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/auth/register">
+                  <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white rounded-xl px-6">
+                    Get Started
+                  </Button>
+                </Link>
               </>
             )}
           </div>
@@ -166,16 +181,19 @@ export default function Navbar() {
                           <p className="text-xs text-gray-400">{user?.email}</p>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
-                      >
-                        <User className="mr-2 h-4 w-4" />
-                        Profile
-                      </Button>
+                      <Link href="/profile" onClick={() => setIsOpen(false)}>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
+                        >
+                          <User className="mr-2 h-4 w-4" />
+                          Profile
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                        onClick={handleLogout}
                       >
                         <LogOut className="mr-2 h-4 w-4" />
                         Log out
@@ -183,12 +201,19 @@ export default function Navbar() {
                     </div>
                   ) : (
                     <>
-                      <Button variant="ghost" className="w-full text-gray-300 hover:text-teal-400 hover:bg-teal-500/10">
-                        Sign In
-                      </Button>
-                      <Button className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white">
-                        Get Started
-                      </Button>
+                      <Link href="/auth/login" onClick={() => setIsOpen(false)}>
+                        <Button
+                          variant="ghost"
+                          className="w-full text-gray-300 hover:text-teal-400 hover:bg-teal-500/10"
+                        >
+                          Sign In
+                        </Button>
+                      </Link>
+                      <Link href="/auth/register" onClick={() => setIsOpen(false)}>
+                        <Button className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white">
+                          Get Started
+                        </Button>
+                      </Link>
                     </>
                   )}
                 </div>

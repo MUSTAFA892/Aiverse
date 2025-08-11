@@ -21,6 +21,7 @@ import {
   Users,
 } from "lucide-react"
 import { useRef } from "react"
+import Link from "next/link"
 
 const aiTools = [
   {
@@ -30,6 +31,7 @@ const aiTools = [
     category: "Social Media",
     gradient: "from-teal-400 via-cyan-500 to-blue-500",
     users: "12.5K",
+    href: "/tools/instagram-caption",
   },
   {
     icon: Mic,
@@ -38,6 +40,7 @@ const aiTools = [
     category: "Audio",
     gradient: "from-emerald-400 via-teal-500 to-cyan-500",
     users: "8.2K",
+    href: "/tools/voice-cloning",
   },
   {
     icon: MessageSquare,
@@ -46,6 +49,7 @@ const aiTools = [
     category: "Conversation",
     gradient: "from-cyan-400 via-blue-500 to-indigo-500",
     users: "15.7K",
+    href: "/tools",
   },
   {
     icon: ImageIcon,
@@ -54,6 +58,7 @@ const aiTools = [
     category: "Visual",
     gradient: "from-blue-400 via-indigo-500 to-purple-500",
     users: "22.1K",
+    href: "/tools",
   },
   {
     icon: Music,
@@ -62,6 +67,7 @@ const aiTools = [
     category: "Audio",
     gradient: "from-indigo-400 via-purple-500 to-pink-500",
     users: "6.8K",
+    href: "/tools",
   },
   {
     icon: Video,
@@ -70,6 +76,7 @@ const aiTools = [
     category: "Visual",
     gradient: "from-purple-400 via-pink-500 to-rose-500",
     users: "9.3K",
+    href: "/tools",
   },
 ]
 
@@ -144,20 +151,24 @@ export default function HomePage() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="flex flex-col sm:flex-row gap-6 justify-center mb-16"
           >
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-10 py-4 rounded-2xl text-lg font-semibold shadow-2xl shadow-teal-500/25 hover:shadow-teal-500/40 transition-all duration-300 transform hover:scale-105"
-            >
-              Start Creating
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-2 border-teal-500/50 text-teal-400 hover:bg-teal-500/10 px-10 py-4 rounded-2xl text-lg font-semibold backdrop-blur-sm bg-transparent"
-            >
-              Watch Demo
-            </Button>
+            <Link href="/auth/register">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-10 py-4 rounded-2xl text-lg font-semibold shadow-2xl shadow-teal-500/25 hover:shadow-teal-500/40 transition-all duration-300 transform hover:scale-105"
+              >
+                Start Creating
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            <Link href="/tools">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-2 border-teal-500/50 text-teal-400 hover:bg-teal-500/10 px-10 py-4 rounded-2xl text-lg font-semibold backdrop-blur-sm bg-transparent"
+              >
+                Explore Tools
+              </Button>
+            </Link>
           </motion.div>
 
           {/* Stats */}
@@ -211,36 +222,35 @@ export default function HomePage() {
                 whileHover={{ y: -10, scale: 1.02 }}
                 className="group"
               >
-                <Card className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-xl border border-gray-700/50 hover:border-teal-500/50 transition-all duration-500 h-full overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <Link href={tool.href}>
+                  <Card className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-xl border border-gray-700/50 hover:border-teal-500/50 transition-all duration-500 h-full overflow-hidden relative cursor-pointer">
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                  <CardHeader className="relative">
-                    <div
-                      className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${tool.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
-                    >
-                      <tool.icon className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <CardTitle className="text-white text-xl font-bold">{tool.title}</CardTitle>
-                      <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">{tool.users} users</Badge>
-                    </div>
-                    <Badge variant="outline" className="border-gray-600 text-gray-400 w-fit">
-                      {tool.category}
-                    </Badge>
-                  </CardHeader>
-                  <CardContent className="relative">
-                    <CardDescription className="text-gray-300 mb-6 text-base leading-relaxed">
-                      {tool.description}
-                    </CardDescription>
-                    <Button
-                      variant="ghost"
-                      className="text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 p-0 font-semibold group-hover:translate-x-2 transition-transform duration-300"
-                    >
-                      Try Now
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
+                    <CardHeader className="relative">
+                      <div
+                        className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${tool.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
+                      >
+                        <tool.icon className="w-8 h-8 text-white" />
+                      </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <CardTitle className="text-white text-xl font-bold">{tool.title}</CardTitle>
+                        <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">{tool.users} users</Badge>
+                      </div>
+                      <Badge variant="outline" className="border-gray-600 text-gray-400 w-fit">
+                        {tool.category}
+                      </Badge>
+                    </CardHeader>
+                    <CardContent className="relative">
+                      <CardDescription className="text-gray-300 mb-6 text-base leading-relaxed">
+                        {tool.description}
+                      </CardDescription>
+                      <div className="text-teal-400 hover:text-teal-300 font-semibold group-hover:translate-x-2 transition-transform duration-300 flex items-center">
+                        Try Now
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -308,13 +318,15 @@ export default function HomePage() {
             <p className="text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
               Join thousands of creators who are already transforming their ideas with AIverse
             </p>
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white px-12 py-6 rounded-2xl text-xl font-bold shadow-2xl shadow-teal-500/25 hover:shadow-teal-500/40 transition-all duration-300 transform hover:scale-105"
-            >
-              Get Started Free
-              <ArrowRight className="ml-3 w-6 h-6" />
-            </Button>
+            <Link href="/auth/register">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white px-12 py-6 rounded-2xl text-xl font-bold shadow-2xl shadow-teal-500/25 hover:shadow-teal-500/40 transition-all duration-300 transform hover:scale-105"
+              >
+                Get Started Free
+                <ArrowRight className="ml-3 w-6 h-6" />
+              </Button>
+            </Link>
           </motion.div>
         </div>
       </section>

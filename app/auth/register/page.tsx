@@ -4,11 +4,14 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Sparkles, Mail, Lock, Eye, EyeOff, User, ArrowRight, Check } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/hooks/use-toast"
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -21,32 +24,46 @@ export default function RegisterPage() {
     confirmPassword: "",
   })
 
+  const { register } = useAuth()
+  const router = useRouter()
+  const { toast } = useToast()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match")
+      toast({
+        title: "Password mismatch",
+        description: "Passwords don't match. Please try again.",
+        variant: "destructive",
+      })
       setIsLoading(false)
       return
     }
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-        }),
-      })
+      const success = await register(formData.name, formData.email, formData.password)
 
-      if (response.ok) {
-        window.location.href = "/auth/login?message=Registration successful"
+      if (success) {
+        toast({
+          title: "Welcome to AIverse!",
+          description: "Your account has been created successfully.",
+        })
+        router.push("/")
+      } else {
+        toast({
+          title: "Registration failed",
+          description: "Unable to create account. Please try again.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
-      console.error("Registration error:", error)
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }

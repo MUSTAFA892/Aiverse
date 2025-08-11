@@ -4,11 +4,14 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -18,24 +21,36 @@ export default function LoginPage() {
     password: "",
   })
 
+  const { login } = useAuth()
+  const router = useRouter()
+  const { toast } = useToast()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      // Here you would integrate with your MongoDB auth
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      })
+      const success = await login(formData.email, formData.password)
 
-      if (response.ok) {
-        // Handle successful login
-        window.location.href = "/dashboard"
+      if (success) {
+        toast({
+          title: "Welcome back!",
+          description: "You have been successfully logged in.",
+        })
+        router.push("/")
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Invalid email or password. Please try again.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
-      console.error("Login error:", error)
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
