@@ -39,7 +39,32 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ user }, { status: 200 })
+    // Format user data properly
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar || "",
+      plan: user.plan || "Free",
+      joinDate: user.createdAt
+        ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+        : "January 2024",
+      totalGenerations: user.totalGenerations || 0,
+      preferences: user.preferences || {
+        emailNotifications: true,
+        marketingEmails: false,
+        usageAlerts: true,
+        darkMode: true,
+        animations: true,
+      },
+      profile: user.profile || {
+        bio: "",
+        location: "",
+        website: "",
+      },
+    }
+
+    return NextResponse.json({ user: userData }, { status: 200 })
   } catch (error) {
     console.error("Profile fetch error:", error)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

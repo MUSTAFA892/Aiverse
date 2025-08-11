@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,23 +11,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { User, Lock, Camera, Save, Shield, CreditCard, Palette } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
 
+// Replace the useState initialization with proper data fetching
 export default function ProfilePage() {
-  const [user, setUser] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    avatar: "",
-    plan: "Pro",
-    joinDate: "January 2024",
-    totalGenerations: 1250,
-  })
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   const [profileData, setProfileData] = useState({
-    name: user.name,
-    email: user.email,
-    bio: "AI enthusiast and creative professional",
-    location: "San Francisco, CA",
-    website: "https://johndoe.com",
+    name: "",
+    email: "",
+    bio: "",
+    location: "",
+    website: "",
   })
 
   const [passwordData, setPasswordData] = useState({
@@ -36,10 +32,126 @@ export default function ProfilePage() {
     confirmPassword: "",
   })
 
+  const [preferences, setPreferences] = useState({
+    emailNotifications: true,
+    marketingEmails: false,
+    usageAlerts: true,
+    darkMode: true,
+    animations: true,
+  })
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    fetchUserData()
+  }, [])
+
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch("/api/user/profile")
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+        setProfileData({
+          name: data.user.name,
+          email: data.user.email,
+          bio: data.user.profile?.bio || "",
+          location: data.user.profile?.location || "",
+          website: data.user.profile?.website || "",
+        })
+        setPreferences(
+          data.user.preferences || {
+            emailNotifications: true,
+            marketingEmails: false,
+            usageAlerts: true,
+            darkMode: true,
+            animations: true,
+          },
+        )
+      }
+    } catch (error) {
+      console.error("Failed to fetch user data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle profile update
-    console.log("Profile updated:", profileData)
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: profileData.name,
+          email: profileData.email,
+          profile: {
+            bio: profileData.bio,
+            location: profileData.location,
+            website: profileData.website,
+          },
+        }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Profile updated!",
+          description: "Your profile has been updated successfully.",
+        })
+        fetchUserData() // Refresh user data
+      } else {
+        throw new Error("Failed to update profile")
+      }
+    } catch (error) {
+      toast({
+        title: "Update failed",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handlePreferencesUpdate = async () => {
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferences }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Preferences saved!",
+          description: "Your preferences have been updated successfully.",
+        })
+      } else {
+        throw new Error("Failed to update preferences")
+      }
+    } catch (error) {
+      toast({
+        title: "Update failed",
+        description: "Failed to update preferences. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Unable to load profile</h2>
+          <p className="text-gray-400">Please try refreshing the page</p>
+        </div>
+      </div>
+    )
   }
 
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -343,7 +455,8 @@ export default function ProfilePage() {
                           </div>
                           <input
                             type="checkbox"
-                            defaultChecked
+                            checked={preferences.emailNotifications}
+                            onChange={(e) => setPreferences({ ...preferences, emailNotifications: e.target.checked })}
                             className="rounded border-gray-600 text-teal-500 focus:ring-teal-500/20"
                           />
                         </div>
@@ -354,6 +467,8 @@ export default function ProfilePage() {
                           </div>
                           <input
                             type="checkbox"
+                            checked={preferences.marketingEmails}
+                            onChange={(e) => setPreferences({ ...preferences, marketingEmails: e.target.checked })}
                             className="rounded border-gray-600 text-teal-500 focus:ring-teal-500/20"
                           />
                         </div>
@@ -364,7 +479,8 @@ export default function ProfilePage() {
                           </div>
                           <input
                             type="checkbox"
-                            defaultChecked
+                            checked={preferences.usageAlerts}
+                            onChange={(e) => setPreferences({ ...preferences, usageAlerts: e.target.checked })}
                             className="rounded border-gray-600 text-teal-500 focus:ring-teal-500/20"
                           />
                         </div>
@@ -381,7 +497,8 @@ export default function ProfilePage() {
                           </div>
                           <input
                             type="checkbox"
-                            defaultChecked
+                            checked={preferences.darkMode}
+                            onChange={(e) => setPreferences({ ...preferences, darkMode: e.target.checked })}
                             className="rounded border-gray-600 text-teal-500 focus:ring-teal-500/20"
                           />
                         </div>
@@ -392,14 +509,18 @@ export default function ProfilePage() {
                           </div>
                           <input
                             type="checkbox"
-                            defaultChecked
+                            checked={preferences.animations}
+                            onChange={(e) => setPreferences({ ...preferences, animations: e.target.checked })}
                             className="rounded border-gray-600 text-teal-500 focus:ring-teal-500/20"
                           />
                         </div>
                       </div>
                     </div>
 
-                    <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white">
+                    <Button
+                      onClick={handlePreferencesUpdate}
+                      className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white"
+                    >
                       <Save className="w-4 h-4 mr-2" />
                       Save Preferences
                     </Button>

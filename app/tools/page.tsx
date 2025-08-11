@@ -2,57 +2,70 @@
 
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Camera, Mic, MessageSquare, ImageIcon, Music, Video, ArrowRight } from "lucide-react"
+import Link from "next/link"
 
+// Update the tools array to have proper navigation links
 const tools = [
   {
     icon: Camera,
-    title: "Instagram Caption Generator",
-    description: "Generate engaging captions for your Instagram posts with AI",
+    title: "Instagram Caption AI",
+    description: "Generate viral captions that boost engagement and reach",
     category: "Social Media",
-    color: "from-pink-500 to-purple-600",
+    gradient: "from-teal-400 via-cyan-500 to-blue-500",
+    users: "12.5K",
+    href: "/tools/instagram-caption",
     status: "Available",
   },
   {
     icon: Mic,
-    title: "Voice Cloning",
-    description: "Clone any voice with advanced AI technology",
+    title: "Voice Synthesis Pro",
+    description: "Clone voices with studio-quality AI technology",
     category: "Audio",
-    color: "from-blue-500 to-cyan-600",
-    status: "Coming Soon",
+    gradient: "from-emerald-400 via-teal-500 to-cyan-500",
+    users: "8.2K",
+    href: "/tools/voice-cloning",
+    status: "Available",
   },
   {
     icon: MessageSquare,
-    title: "AI Chatbot",
-    description: "Intelligent conversational AI for any purpose",
+    title: "Smart Chatbot Builder",
+    description: "Create intelligent conversational AI assistants",
     category: "Conversation",
-    color: "from-green-500 to-emerald-600",
-    status: "Available",
+    gradient: "from-cyan-400 via-blue-500 to-indigo-500",
+    users: "15.7K",
+    href: "#",
+    status: "Coming Soon",
   },
   {
     icon: ImageIcon,
-    title: "Image Generator",
-    description: "Create stunning images from text descriptions",
+    title: "AI Art Studio",
+    description: "Transform ideas into stunning visual masterpieces",
     category: "Visual",
-    color: "from-orange-500 to-red-600",
-    status: "Available",
+    gradient: "from-blue-400 via-indigo-500 to-purple-500",
+    users: "22.1K",
+    href: "#",
+    status: "Coming Soon",
   },
   {
     icon: Music,
-    title: "Music Composer",
-    description: "Generate original music tracks with AI",
+    title: "Music Composer AI",
+    description: "Compose original tracks across any genre",
     category: "Audio",
-    color: "from-purple-500 to-indigo-600",
+    gradient: "from-indigo-400 via-purple-500 to-pink-500",
+    users: "6.8K",
+    href: "#",
     status: "Beta",
   },
   {
     icon: Video,
-    title: "Video Editor",
-    description: "AI-powered video editing and enhancement",
+    title: "Video Magic Editor",
+    description: "Professional video editing powered by AI",
     category: "Visual",
-    color: "from-teal-500 to-blue-600",
+    gradient: "from-purple-400 via-pink-500 to-rose-500",
+    users: "9.3K",
+    href: "#",
     status: "Coming Soon",
   },
 ]
@@ -84,46 +97,40 @@ export default function ToolsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
             >
-              <Card className="bg-gray-900/50 border-gray-800 hover:border-gray-700 transition-all duration-300 group hover:scale-105 h-full">
-                <CardHeader>
-                  <div
-                    className={`w-12 h-12 rounded-lg bg-gradient-to-r ${tool.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    <tool.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <CardTitle className="text-white text-lg">{tool.title}</CardTitle>
-                    <Badge
-                      variant={
-                        tool.status === "Available" ? "default" : tool.status === "Beta" ? "secondary" : "outline"
-                      }
-                      className={
-                        tool.status === "Available"
-                          ? "bg-green-600 text-white"
-                          : tool.status === "Beta"
-                            ? "bg-yellow-600 text-white"
-                            : "border-gray-600 text-gray-400"
-                      }
+              {/* Update the card rendering to handle navigation properly */}
+              <Link href={tool.href} className={tool.status === "Available" ? "" : "pointer-events-none"}>
+                <Card className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-xl border border-gray-700/50 hover:border-teal-500/50 transition-all duration-500 h-full overflow-hidden relative cursor-pointer">
+                  <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                  <CardHeader className="relative">
+                    <div
+                      className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${tool.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
                     >
-                      {tool.status}
+                      <tool.icon className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <CardTitle className="text-white text-xl font-bold">{tool.title}</CardTitle>
+                      <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">{tool.users} users</Badge>
+                    </div>
+                    <Badge variant="outline" className="border-gray-600 text-gray-400 w-fit">
+                      {tool.category}
                     </Badge>
-                  </div>
-                  <Badge variant="secondary" className="bg-gray-800 text-gray-300 w-fit">
-                    {tool.category}
-                  </Badge>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col">
-                  <CardDescription className="text-gray-400 mb-4 flex-1">{tool.description}</CardDescription>
-                  <Button
-                    variant="ghost"
-                    className="text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 p-0 justify-start"
-                    disabled={tool.status === "Coming Soon"}
-                  >
-                    {tool.status === "Coming Soon" ? "Coming Soon" : "Try Now"}
-                    {tool.status !== "Coming Soon" && <ArrowRight className="ml-2 w-4 h-4" />}
-                  </Button>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent className="relative">
+                    <CardDescription className="text-gray-300 mb-6 text-base leading-relaxed">
+                      {tool.description}
+                    </CardDescription>
+                    <div
+                      className={`font-semibold group-hover:translate-x-2 transition-transform duration-300 flex items-center ${
+                        tool.status === "Available" ? "text-teal-400 hover:text-teal-300" : "text-gray-500"
+                      }`}
+                    >
+                      {tool.status === "Available" ? "Try Now" : tool.status}
+                      {tool.status === "Available" && <ArrowRight className="ml-2 w-4 h-4" />}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             </motion.div>
           ))}
         </div>
