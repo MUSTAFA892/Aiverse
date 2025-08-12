@@ -89,8 +89,9 @@ export default function AboutPage(): JSX.Element {
           transition={{ duration: 0.7 }}
           className="text-center mb-12"
         >
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-4">
-            <span className="shimmer">AIverse</span>
+          <h1 className="text-5xl md:text-6xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">About
+            </span>
           </h1>
           <p className="text-gray-300 max-w-3xl mx-auto text-lg">
             Student-built, design-first AI tools — simple, fast, and built to
@@ -217,7 +218,7 @@ export default function AboutPage(): JSX.Element {
           transition={{ delay: 0.2 }}
           className="text-center text-gray-400"
         >
-          © {new Date().getFullYear()} AIverse — Student built. Design led.
+          © {new Date().getFullYear()} AIverse — Designed by Shirohige
         </motion.footer>
       </div>
 
