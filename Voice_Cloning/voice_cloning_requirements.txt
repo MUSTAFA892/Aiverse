@@ -1,5 +1,5 @@
 flask>=3.0.0
-TTS>=0.22.0
+TTS
 flask_cors
 google-generativeai
 python-dotenv
