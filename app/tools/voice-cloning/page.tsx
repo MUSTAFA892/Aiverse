@@ -11,32 +11,105 @@ import { useToast } from "@/hooks/use-toast"
 
 export default function VoiceCloningPage() {
   const [isRecording, setIsRecording] = useState(false)
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
+  const [voiceFilePath, setVoiceFilePath] = useState(null)
   const [text, setText] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedAudio, setGeneratedAudio] = useState<string | null>(null)
+  const [generatedAudioUrl, setGeneratedAudioUrl] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const mediaRecorderRef = useRef(null)
+  const audioRef = useRef(null)
   const { toast } = useToast()
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mediaRecorder = new MediaRecorder(stream)
+      // Use audio/webm for broader browser compatibility
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/wav"
+      console.log(`Using mimeType: ${mimeType}`)
+      const mediaRecorder = new MediaRecorder(stream, { mimeType })
       mediaRecorderRef.current = mediaRecorder
 
-      const chunks: BlobPart[] = []
+      const chunks = []
 
       mediaRecorder.ondataavailable = (event) => {
-        chunks.push(event.data)
+        if (event.data.size > 0) {
+          chunks.push(event.data)
+        } else {
+          console.warn("Received empty audio chunk")
+        }
       }
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
+        if (chunks.length === 0) {
+          toast({
+            title: "Recording failed",
+            description: "No audio data recorded. Please try again.",
+            variant: "destructive",
+          })
+          stream.getTracks().forEach((track) => track.stop())
+          return
+        }
+
         const blob = new Blob(chunks, { type: "audio/wav" })
-        setAudioBlob(blob)
         stream.getTracks().forEach((track) => track.stop())
+
+        // Verify blob size
+        if (blob.size < 1000) {
+          console.error("Audio blob is too small:", blob.size, "bytes")
+          toast({
+            title: "Recording failed",
+            description: "Recorded audio is too short or empty. Please record for 10-30 seconds.",
+            variant: "destructive",
+          })
+          return
+        }
+
+        // Send audio to backend for saving
+        try {
+          const formData = new FormData()
+          formData.append("voice", blob, "voice-sample.wav")
+
+          console.log("Uploading voice sample to /upload...")
+          const response = await fetch("http://127.0.0.1:5000/upload", {
+            method: "POST",
+            body: formData,
+            signal: AbortSignal.timeout(10000),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            console.error("Upload error:", {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorData.error || "No error message provided",
+            })
+            throw new Error(errorData.error || `Failed to upload voice sample (HTTP ${response.status})`)
+          }
+
+          const { file_path } = await response.json()
+          setVoiceFilePath(file_path)
+
+          // Download for verification
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement("a")
+          link.href = url
+          link.download = "recorded-voice.wav"
+          link.click()
+          URL.revokeObjectURL(url)
+
+          toast({
+            title: "Recording uploaded",
+            description: `Voice sample saved at ${file_path}. Check the downloaded 'recorded-voice.wav' file.`,
+          })
+        } catch (error) {
+          console.error("Voice upload error:", error)
+          toast({
+            title: "Upload failed",
+            description: error.message || "Failed to upload voice sample to the server. Check the console for details.",
+            variant: "destructive",
+          })
+        }
       }
 
       mediaRecorder.start()
@@ -44,12 +117,24 @@ export default function VoiceCloningPage() {
 
       toast({
         title: "Recording started",
-        description: "Speak clearly for 10-30 seconds to capture your voice.",
+        description: "Speak clearly for 10-30 seconds. The audio will be uploaded and downloaded for verification.",
       })
     } catch (error) {
+      console.error("Microphone access error:", {
+        name: error.name,
+        message: error.message,
+      })
+      let description = "Unable to access microphone. Please check permissions."
+      if (error.name === "NotAllowedError") {
+        description = "Microphone access denied. Please allow microphone access in your browser settings."
+      } else if (error.name === "NotFoundError") {
+        description = "No microphone detected. Please ensure a microphone is connected."
+      } else if (error.name === "NotReadableError") {
+        description = "Microphone is in use by another application. Please close other apps using the microphone."
+      }
       toast({
         title: "Recording failed",
-        description: "Unable to access microphone. Please check permissions.",
+        description,
         variant: "destructive",
       })
     }
@@ -59,16 +144,11 @@ export default function VoiceCloningPage() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop()
       setIsRecording(false)
-
-      toast({
-        title: "Recording completed",
-        description: "Voice sample captured successfully!",
-      })
     }
   }
 
   const generateVoice = async () => {
-    if (!audioBlob || !text.trim()) {
+    if (!voiceFilePath || !text.trim()) {
       toast({
         title: "Missing requirements",
         description: "Please record your voice and enter text to generate.",
@@ -79,36 +159,82 @@ export default function VoiceCloningPage() {
 
     setIsGenerating(true)
 
-    // Simulate AI voice generation
-    setTimeout(() => {
-      // In a real app, this would be the generated audio URL
-      setGeneratedAudio("/placeholder-audio.mp3")
-      setIsGenerating(false)
+    try {
+      console.log("Sending generation request to /generate...", {
+        text,
+        language: "en",
+        voice_path: voiceFilePath,
+      })
+      const response = await fetch("http://127.0.0.1:5000/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "audio/wav",
+        },
+        body: JSON.stringify({
+          text,
+          language: "en",
+          voice_path: voiceFilePath,
+        }),
+        signal: AbortSignal.timeout(30000),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error("Generation error:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData.error || "No error message provided",
+        })
+        throw new Error(errorData.error || `Failed to generate voice (HTTP ${response.status})`)
+      }
+
+      const audioBlob = await response.blob()
+      if (audioBlob.type !== "audio/wav") {
+        throw new Error("Received invalid audio format from server")
+      }
+      const audioUrl = URL.createObjectURL(audioBlob)
+      setGeneratedAudioUrl(audioUrl)
 
       toast({
         title: "Voice generated!",
         description: "Your AI voice has been created successfully.",
       })
-    }, 3000)
+    } catch (error) {
+      console.error("Voice generation error:", error)
+      toast({
+        title: "Generation failed",
+        description: error.message || "An error occurred while generating the voice. Check the console for details.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const playGeneratedAudio = () => {
-    if (generatedAudio && audioRef.current) {
+    if (generatedAudioUrl && audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause()
         setIsPlaying(false)
       } else {
-        audioRef.current.play()
+        audioRef.current.play().catch((error) => {
+          toast({
+            title: "Playback failed",
+            description: "Unable to play audio: " + error.message,
+            variant: "destructive",
+          })
+        })
         setIsPlaying(true)
       }
     }
   }
 
   const downloadAudio = () => {
-    if (generatedAudio) {
+    if (generatedAudioUrl) {
       const link = document.createElement("a")
-      link.href = generatedAudio
-      link.download = "ai-voice-output.mp3"
+      link.href = generatedAudioUrl
+      link.download = "ai-voice-output.wav"
       link.click()
 
       toast({
@@ -163,14 +289,14 @@ export default function VoiceCloningPage() {
                     className={`w-32 h-32 rounded-full mx-auto mb-6 flex items-center justify-center transition-all duration-300 ${
                       isRecording
                         ? "bg-gradient-to-r from-red-500 to-pink-500 animate-pulse"
-                        : audioBlob
-                          ? "bg-gradient-to-r from-emerald-500 to-teal-500"
-                          : "bg-gradient-to-r from-gray-600 to-gray-700"
+                        : voiceFilePath
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-500"
+                        : "bg-gradient-to-r from-gray-600 to-gray-700"
                     }`}
                   >
                     {isRecording ? (
                       <MicOff className="w-12 h-12 text-white" />
-                    ) : audioBlob ? (
+                    ) : voiceFilePath ? (
                       <Waveform className="w-12 h-12 text-white" />
                     ) : (
                       <Mic className="w-12 h-12 text-white" />
@@ -185,11 +311,11 @@ export default function VoiceCloningPage() {
                         : "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
                     }`}
                   >
-                    {isRecording ? "Stop Recording" : audioBlob ? "Re-record" : "Start Recording"}
+                    {isRecording ? "Stop Recording" : voiceFilePath ? "Re-record" : "Start Recording"}
                   </Button>
                 </div>
 
-                {audioBlob && (
+                {voiceFilePath && (
                   <div className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -201,7 +327,7 @@ export default function VoiceCloningPage() {
                           <p className="text-gray-400 text-sm">Ready for voice generation</p>
                         </div>
                       </div>
-                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Captured</Badge>
+                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Uploaded</Badge>
                     </div>
                   </div>
                 )}
@@ -252,7 +378,7 @@ export default function VoiceCloningPage() {
 
                 <Button
                   onClick={generateVoice}
-                  disabled={!audioBlob || !text.trim() || isGenerating}
+                  disabled={!voiceFilePath || !text.trim() || isGenerating}
                   className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isGenerating ? (
@@ -273,7 +399,7 @@ export default function VoiceCloningPage() {
         </div>
 
         {/* Generated Audio Output */}
-        {generatedAudio && (
+        {generatedAudioUrl && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -297,7 +423,7 @@ export default function VoiceCloningPage() {
                       <p className="text-gray-300 text-sm italic">"{text}"</p>
                     </div>
                     <audio ref={audioRef} onEnded={() => setIsPlaying(false)} className="hidden">
-                      <source src={generatedAudio} type="audio/mpeg" />
+                      <source src={generatedAudioUrl} type="audio/wav" />
                     </audio>
                   </div>
 
