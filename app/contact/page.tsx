@@ -31,14 +31,14 @@ const contactMethods = [
     icon: Phone,
     title: "Call Us",
     description: "Speak directly with our team",
-    contact: "+1 (555) 123-4567",
+    contact: "+91 7708797253",
     color: "from-purple-500 to-indigo-600",
   },
   {
     icon: MapPin,
     title: "Visit Us",
     description: "Our headquarters",
-    contact: "San Francisco, CA",
+    contact: "Kgisl Campus, 365, near Thudiyalur Road, Saravanampatti, Coimbatore, Tamil Nadu 641035",
     color: "from-orange-500 to-red-600",
   },
 ]
