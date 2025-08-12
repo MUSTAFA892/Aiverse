@@ -17,7 +17,7 @@ const contactMethods = [
     icon: Mail,
     title: "Email Us",
     description: "Get in touch via email",
-    contact: "hello@aiverse.com",
+    contact: "mustafatinwala6@gmail.com",
     color: "from-blue-500 to-cyan-600",
   },
   {

@@ -34,7 +34,7 @@ const team = [
   {
     name: "Mustafa Tinwala",
     role: "Frontend Developer",
-    details: "Crafts fluid, accessible UIs — React + Tailwind specialist.",
+    details: "Crafts fluid, accessible UIs — NextJS + Tailwind specialist.",
   },
   {
     name: "Nhowmitha Suresh",
@@ -49,7 +49,7 @@ const team = [
   {
     name: "Ajay",
     role: "Backend Developer",
-    details: "Performance-minded engineer, loves databases and caching.",
+    details: "Performance-minded engineer, databases and caching.",
   },
   {
     name: "Nevil",
