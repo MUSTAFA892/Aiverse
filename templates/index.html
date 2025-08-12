@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Caption Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="container bg-white p-8 rounded-xl shadow-lg">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Instagram Caption AI</h1>
+        <p class="text-center text-gray-600 mb-8">Upload an image and tell me what you want, and I'll generate a caption, song, and hashtags!</p>
+
+        <form id="captionForm" class="space-y-6">
+            <div>
+                <label for="imageUpload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image</label>
+                <input type="file" id="imageUpload" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+            </div>
+
+            <div>
+                <label for="inputText" class="block text-sm font-medium text-gray-700 mb-2">What's in the image or what do you want? (Optional)</label>
+                <textarea id="inputText" rows="3" placeholder="e.g., 'My dog playing in the park', 'A vibrant sunset over the ocean', 'Something inspiring'" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+
+            <button type="submit" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                Generate Suggestions
+                <div id="loadingSpinner" class="loading-spinner ml-3"></div>
+            </button>
+        </form>
+
+        <div id="results" class="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200 hidden">
+            <h2 class="text-xl font-semibold text-blue-800 mb-4">Your Suggestions:</h2>
+            <div class="mb-4">
+                <h3 class="font-medium text-gray-700 mb-1">Caption:</h3>
+                <p id="outputCaption" class="text-gray-900 bg-white p-3 rounded-md border border-gray-200 break-words"></p>
+                <button onclick="copyToClipboard('outputCaption')" class="mt-2 text-blue-600 hover:text-blue-800 text-sm focus:outline-none">Copy Caption</button>
+            </div>
+            <div class="mb-4">
+                <h3 class="font-medium text-gray-700 mb-1">Song Recommendation:</h3>
+                <p id="outputSong" class="text-gray-900 bg-white p-3 rounded-md border border-gray-200 break-words"></p>
+                <a id="outputSongLink" href="#" target="_blank" class="hidden mt-2 text-blue-600 hover:text-blue-800 text-sm focus:outline-none">Listen on Spotify</a>
+                <button onclick="copyToClipboard('outputSong')" class="mt-2 text-blue-600 hover:text-blue-800 text-sm focus:outline-none">Copy Song Info</button>
+            </div>
+            <div>
+                <h3 class="font-medium text-gray-700 mb-1">Hashtags:</h3>
+                <p id="outputHashtags" class="text-gray-900 bg-white p-3 rounded-md border border-gray-200 break-words"></p>
+                <button onclick="copyToClipboard('outputHashtags')" class="mt-2 text-blue-600 hover:text-blue-800 text-sm focus:outline-none">Copy Hashtags</button>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="mt-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg hidden" role="alert">
+            <p class="font-bold">Error:</p>
+            <p id="errorText"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('captionForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const imageInput = document.getElementById('imageUpload');
+            const inputText = document.getElementById('inputText').value;
+            const resultsDiv = document.getElementById('results');
+            const errorMessageDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const submitButton = this.querySelector('button[type="submit"]');
+            const outputSongLink = document.getElementById('outputSongLink');
+
+
+            // Hide previous results and errors
+            resultsDiv.classList.add('hidden');
+            errorMessageDiv.classList.add('hidden');
+            errorText.textContent = '';
+            outputSongLink.classList.add('hidden'); // Hide Spotify link initially
+            outputSongLink.href = '#';
+
+            // Show loading spinner and disable button
+            loadingSpinner.style.display = 'inline-block';
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+            formData.append('input_text', inputText);
+
+            try {
+                const response = await fetch('/generate_caption', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Something went wrong on the server.');
+                }
+
+                const data = await response.json();
+                document.getElementById('outputCaption').textContent = data.caption;
+                document.getElementById('outputSong').textContent = data.song;
+                document.getElementById('outputHashtags').textContent = data.hashtags.join(' ');
+
+                // Handle Spotify link
+                if (data.song_url) {
+                    outputSongLink.href = data.song_url;
+                    outputSongLink.classList.remove('hidden');
+                } else {
+                    outputSongLink.classList.add('hidden');
+                }
+
+                resultsDiv.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Fetch error:', error);
+                errorText.textContent = error.message;
+                errorMessageDiv.classList.remove('hidden');
+            } finally {
+                // Hide loading spinner and re-enable button
+                loadingSpinner.style.display = 'none';
+                submitButton.disabled = false;
+                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const textToCopy = element.textContent || element.innerText;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            textarea.style.position = 'fixed'; // Prevents scrolling to bottom of page in some browsers
+            textarea.style.left = '-9999px'; // Move off-screen
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                const msg = successful ? 'Copied!' : 'Failed to copy.';
+                // You could add a temporary visual feedback here, e.g., a small pop-up message
+                console.log(msg);
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+    </script>
+</body>
+</html>

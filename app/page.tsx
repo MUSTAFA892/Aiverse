@@ -30,7 +30,6 @@ const aiTools = [
     description: "Generate viral captions that boost engagement and reach",
     category: "Social Media",
     gradient: "from-teal-400 via-cyan-500 to-blue-500",
-    users: "12.5K",
     href: "/tools/instagram-caption",
   },
   {
@@ -39,7 +38,6 @@ const aiTools = [
     description: "Clone voices with studio-quality AI technology",
     category: "Audio",
     gradient: "from-emerald-400 via-teal-500 to-cyan-500",
-    users: "8.2K",
     href: "/tools/voice-cloning",
   },
   {
@@ -48,7 +46,6 @@ const aiTools = [
     description: "Create intelligent conversational AI assistants",
     category: "Conversation",
     gradient: "from-cyan-400 via-blue-500 to-indigo-500",
-    users: "15.7K",
     href: "/tools",
   },
   {
@@ -57,7 +54,6 @@ const aiTools = [
     description: "Transform ideas into stunning visual masterpieces",
     category: "Visual",
     gradient: "from-blue-400 via-indigo-500 to-purple-500",
-    users: "22.1K",
     href: "/tools",
   },
   {
@@ -66,7 +62,6 @@ const aiTools = [
     description: "Compose original tracks across any genre",
     category: "Audio",
     gradient: "from-indigo-400 via-purple-500 to-pink-500",
-    users: "6.8K",
     href: "/tools",
   },
   {
@@ -75,16 +70,15 @@ const aiTools = [
     description: "Professional video editing powered by AI",
     category: "Visual",
     gradient: "from-purple-400 via-pink-500 to-rose-500",
-    users: "9.3K",
     href: "/tools",
   },
 ]
 
 const stats = [
-  { icon: Users, value: "50K+", label: "Active Users" },
-  { icon: Zap, value: "1M+", label: "AI Generations" },
+  { icon: Users, value: "5+", label: "Active Users" },
+  { icon: Zap, value: "20+", label: "AI Generations" },
   { icon: Stars, value: "4.9", label: "User Rating" },
-  { icon: Rocket, value: "99.9%", label: "Uptime" },
+  { icon: Rocket, value: "90.9%", label: "Uptime" },
 ]
 
 export default function HomePage() {
@@ -234,7 +228,6 @@ export default function HomePage() {
                       </div>
                       <div className="flex items-center justify-between mb-2">
                         <CardTitle className="text-white text-xl font-bold">{tool.title}</CardTitle>
-                        <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">{tool.users} users</Badge>
                       </div>
                       <Badge variant="outline" className="border-gray-600 text-gray-400 w-fit">
                         {tool.category}
@@ -315,9 +308,6 @@ export default function HomePage() {
                 Ready to Create Magic?
               </span>
             </h2>
-            <p className="text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Join thousands of creators who are already transforming their ideas with AIverse
-            </p>
             <Link href="/auth/register">
               <Button
                 size="lg"
