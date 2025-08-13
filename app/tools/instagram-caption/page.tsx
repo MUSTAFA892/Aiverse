@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Camera, Upload, Sparkles, Copy, RefreshCw, Music, Hash } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Image from "next/image"
+import Cookies from "js-cookie"
 
 const vibes = [
   { name: "Motivational", color: "from-orange-500 to-red-500", emoji: "💪" },
@@ -82,6 +83,17 @@ export default function InstagramCaptionPage() {
   }
 
   const generateCaptions = async () => {
+    // Check for auth token in cookies
+    const authToken = Cookies.get("auth-token")
+    if (!authToken) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to generate captions and music suggestions. Ensure you are logged in and the auth-token cookie is set.",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!selectedImage || !selectedVibe) {
       toast({
         title: "Missing requirements",
@@ -99,18 +111,28 @@ export default function InstagramCaptionPage() {
     try {
       // Generate captions
       const captionResponse = await fetch(`${process.env.NEXT_PUBLIC_INSTAGRAM_CAPTION_URL}/api/generate-captions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`,
+        },
         body: JSON.stringify({
           vibe: selectedVibe,
           customPrompt,
           imageData: selectedImage,
           language: captionLanguage,
         }),
+        credentials: "include", // Include cookies in the request
       })
 
       if (!captionResponse.ok) {
-        throw new Error(`HTTP error! status: ${captionResponse.status}`)
+        const errorData = await captionResponse.json().catch(() => ({}))
+        console.error("Caption generation error:", {
+          status: captionResponse.status,
+          statusText: captionResponse.statusText,
+          error: errorData.error || "No error message provided",
+        })
+        throw new Error(errorData.error || `HTTP error! status: ${captionResponse.status}`)
       }
 
       const captionData = await captionResponse.json()
@@ -122,16 +144,26 @@ export default function InstagramCaptionPage() {
 
       // Generate music suggestions
       const musicResponse = await fetch(`${process.env.NEXT_PUBLIC_INSTAGRAM_CAPTION_URL}/api/music-suggestions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`,
+        },
         body: JSON.stringify({
           vibe: selectedVibe,
           language: songLanguage,
         }),
+        credentials: "include", // Include cookies in the request
       })
 
       if (!musicResponse.ok) {
-        throw new Error(`HTTP error! status: ${musicResponse.status}`)
+        const errorData = await musicResponse.json().catch(() => ({}))
+        console.error("Music suggestion error:", {
+          status: musicResponse.status,
+          statusText: musicResponse.statusText,
+          error: errorData.error || "No error message provided",
+        })
+        throw new Error(errorData.error || `HTTP error! status: ${musicResponse.status}`)
       }
 
       const musicData = await musicResponse.json()
@@ -147,9 +179,10 @@ export default function InstagramCaptionPage() {
         description: "Your Instagram captions and music suggestions are ready.",
       })
     } catch (error) {
+      console.error("Generation error:", error)
       toast({
         title: "Error",
-        description: `Failed to generate captions: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Failed to generate captions: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       })
     } finally {
@@ -194,7 +227,6 @@ export default function InstagramCaptionPage() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Image Upload Section */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -269,7 +301,6 @@ export default function InstagramCaptionPage() {
             </Card>
           </motion.div>
 
-          {/* Vibe and Language Selection Section */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -368,7 +399,6 @@ export default function InstagramCaptionPage() {
           </motion.div>
         </div>
 
-        {/* Generated Captions */}
         {generatedCaptions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -427,7 +457,6 @@ export default function InstagramCaptionPage() {
           </motion.div>
         )}
 
-        {/* Music Suggestions */}
         {showMusicSuggestions && musicSuggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}

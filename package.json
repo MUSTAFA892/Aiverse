@@ -24,6 +24,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
     "gcp-metadata": "latest",
+    "js-cookie": "^3.0.5",
     "jsonwebtoken": "latest",
     "kerberos": "latest",
     "lucide-react": "^0.454.0",

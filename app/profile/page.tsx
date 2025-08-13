@@ -214,9 +214,9 @@ export default function ProfilePage() {
                     <Badge variant="outline" className="border-gray-600 text-gray-400">
                       Joined {user.joinDate}
                     </Badge>
-                    <Badge variant="outline" className="border-gray-600 text-gray-400">
+{/*                    <Badge variant="outline" className="border-gray-600 text-gray-400">
                       {user.totalGenerations.toLocaleString()} generations
-                    </Badge>
+                    </Badge>*/}
                   </div>
                 </div>
               </div>
@@ -246,13 +246,13 @@ export default function ProfilePage() {
                 <Shield className="w-4 h-4 mr-2" />
                 Security
               </TabsTrigger>
-              <TabsTrigger
+             <TabsTrigger
                 value="billing"
                 className="data-[state=active]:bg-teal-500/20 data-[state=active]:text-teal-400"
               >
                 <CreditCard className="w-4 h-4 mr-2" />
                 Billing
-              </TabsTrigger>
+              </TabsTrigger> 
               <TabsTrigger
                 value="preferences"
                 className="data-[state=active]:bg-teal-500/20 data-[state=active]:text-teal-400"
@@ -394,11 +394,11 @@ export default function ProfilePage() {
                   <div className="space-y-6">
                     <div className="p-6 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 rounded-xl border border-teal-500/20">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-semibold text-white">Current Plan: Pro</h3>
+                        <h3 className="text-xl font-semibold text-white">Current Plan: Free</h3>
                         <Badge className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white">Active</Badge>
                       </div>
-                      <p className="text-gray-300 mb-4">$19/month • Unlimited AI generations</p>
-                      <div className="flex gap-3">
+                      <p className="text-gray-300 mb-4">Free AI generations</p>
+{/*                      <div className="flex gap-3">
                         <Button
                           variant="outline"
                           className="border-teal-500/50 text-teal-400 hover:bg-teal-500/10 bg-transparent"
@@ -411,11 +411,11 @@ export default function ProfilePage() {
                         >
                           Cancel Subscription
                         </Button>
-                      </div>
+                      </div>*/}
                     </div>
 
                     <div>
-                      <h4 className="text-lg font-semibold text-white mb-4">Payment Method</h4>
+{/*                      <h4 className="text-lg font-semibold text-white mb-4">Payment Method</h4>
                       <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
@@ -429,9 +429,9 @@ export default function ProfilePage() {
                             Update
                           </Button>
                         </div>
-                      </div>
+                      </div>*/}
                     </div>
-                  </div>
+                  </div> 
                 </CardContent>
               </Card>
             </TabsContent>

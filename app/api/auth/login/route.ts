@@ -63,21 +63,67 @@ export async function POST(request: NextRequest) {
           avatar: user.avatar,
           plan: user.plan,
         },
+        token, // Include token in response body for debugging
       },
-      { status: 200 },
+      {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": process.env.NODE_ENV === "production" ? "https://your-production-domain.com" : "http://localhost:3000",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+        },
+      },
     )
 
-    // Set HTTP-only cookie
+    // Set cookie (disable httpOnly in development)
     response.cookies.set("auth-token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      httpOnly: process.env.NODE_ENV === "production", // Accessible to js-cookie in development
+      secure: process.env.NODE_ENV === "production", // Use HTTPS in production
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/", // Ensure cookie is accessible site-wide
+    })
+
+    console.log("Cookie set:", {
+      name: "auth-token",
+      value: token,
+      httpOnly: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
     })
 
     return response
   } catch (error) {
     console.error("Login error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Internal server error" },
+      {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": process.env.NODE_ENV === "production" ? "https://aiverse-two.vercel.app/" : "http://localhost:3000",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+        },
+      },
+    )
   }
+}
+
+// Handle CORS preflight requests
+export async function OPTIONS() {
+  return NextResponse.json(
+    {},
+    {
+      headers: {
+        "Access-Control-Allow-Origin": process.env.NODE_ENV === "production" ? "https://aiverse-two.vercel.app/" : "http://localhost:3000",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+      },
+    },
+  )
 }

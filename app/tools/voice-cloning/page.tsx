@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Mic, Play, Pause, Download, AudioWaveformIcon as Waveform, Volume2, MicOff } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import Cookies from "js-cookie"
 
 export default function VoiceCloningPage() {
   const [isRecording, setIsRecording] = useState(false)
@@ -24,7 +25,6 @@ export default function VoiceCloningPage() {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      // Use audio/webm for broader browser compatibility
       const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/wav"
       console.log(`Using mimeType: ${mimeType}`)
       const mediaRecorder = new MediaRecorder(stream, { mimeType })
@@ -54,7 +54,6 @@ export default function VoiceCloningPage() {
         const blob = new Blob(chunks, { type: "audio/wav" })
         stream.getTracks().forEach((track) => track.stop())
 
-        // Verify blob size
         if (blob.size < 1000) {
           console.error("Audio blob is too small:", blob.size, "bytes")
           toast({
@@ -65,7 +64,6 @@ export default function VoiceCloningPage() {
           return
         }
 
-        // Send audio to backend for saving
         try {
           const formData = new FormData()
           formData.append("voice", blob, "voice-sample.wav")
@@ -90,7 +88,6 @@ export default function VoiceCloningPage() {
           const { file_path } = await response.json()
           setVoiceFilePath(file_path)
 
-          // Download for verification
           const url = URL.createObjectURL(blob)
           const link = document.createElement("a")
           link.href = url
@@ -148,6 +145,17 @@ export default function VoiceCloningPage() {
   }
 
   const generateVoice = async () => {
+    // Check for auth token in cookies
+    const authToken = Cookies.get("auth-token")
+    if (!authToken) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to generate AI voice.",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!voiceFilePath || !text.trim()) {
       toast({
         title: "Missing requirements",
@@ -170,6 +178,7 @@ export default function VoiceCloningPage() {
         headers: {
           "Content-Type": "application/json",
           Accept: "audio/wav",
+          "Authorization": `Bearer ${authToken}`, // Include auth token in headers
         },
         body: JSON.stringify({
           text,
@@ -269,7 +278,6 @@ export default function VoiceCloningPage() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Voice Recording Section */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -345,7 +353,6 @@ export default function VoiceCloningPage() {
             </Card>
           </motion.div>
 
-          {/* Text Input Section */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -398,7 +405,6 @@ export default function VoiceCloningPage() {
           </motion.div>
         </div>
 
-        {/* Generated Audio Output */}
         {generatedAudioUrl && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -460,7 +466,6 @@ export default function VoiceCloningPage() {
           </motion.div>
         )}
 
-        {/* Features Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}

@@ -103,10 +103,10 @@ export default function Navbar() {
                       Profile
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-gray-800">
+{/*                  <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-gray-800">
                     <CreditCard className="mr-2 h-4 w-4" />
                     Billing
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-gray-800">
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
