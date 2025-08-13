@@ -83,8 +83,15 @@ export default function InstagramCaptionPage() {
   }
 
   const generateCaptions = async () => {
-    // Check for auth token in cookies
     const authToken = Cookies.get("auth-token")
+{/*    console.log("Auth token (cookie):", authToken || "No cookie found")
+    console.log("All cookies:", Cookies.get())
+    console.log("API URL:", process.env.NEXT_PUBLIC_INSTAGRAM_CAPTION_URL)
+    console.log("Request headers:", {
+      "Content-Type": "application/json",
+      "Authorization": authToken ? `Bearer ${authToken}` : "No token",
+    })*/}
+
     if (!authToken) {
       toast({
         title: "Authentication required",
@@ -109,7 +116,7 @@ export default function InstagramCaptionPage() {
     setMusicSuggestions([])
 
     try {
-      // Generate captions
+      console.log("Sending request to /api/generate-captions")
       const captionResponse = await fetch(`${process.env.NEXT_PUBLIC_INSTAGRAM_CAPTION_URL}/api/generate-captions`, {
         method: "POST",
         headers: {
@@ -122,17 +129,28 @@ export default function InstagramCaptionPage() {
           imageData: selectedImage,
           language: captionLanguage,
         }),
-        credentials: "include", // Include cookies in the request
+        credentials: "include",
       })
 
+      console.log("Caption response headers:", Object.fromEntries(captionResponse.headers.entries()))
+
       if (!captionResponse.ok) {
-        const errorData = await captionResponse.json().catch(() => ({}))
-        console.error("Caption generation error:", {
-          status: captionResponse.status,
-          statusText: captionResponse.statusText,
-          error: errorData.error || "No error message provided",
-        })
-        throw new Error(errorData.error || `HTTP error! status: ${captionResponse.status}`)
+        let errorMessage = "Unknown error"
+        try {
+          const errorData = await captionResponse.json()
+          errorMessage = errorData.error || `HTTP error! status: ${captionResponse.status}`
+          console.error("Caption generation error:", {
+            status: captionResponse.status,
+            statusText: captionResponse.statusText,
+            error: errorData.error || "No error message provided",
+            response: errorData,
+            headers: Object.fromEntries(captionResponse.headers.entries()),
+          })
+        } catch (e) {
+          console.error("Failed to parse caption response:", e)
+          errorMessage = `HTTP error! status: ${captionResponse.status}`
+        }
+        throw new Error(errorMessage)
       }
 
       const captionData = await captionResponse.json()
@@ -140,9 +158,10 @@ export default function InstagramCaptionPage() {
         throw new Error(captionData.error)
       }
 
+      console.log("Caption response:", captionData)
       setGeneratedCaptions(captionData.captions || [])
 
-      // Generate music suggestions
+      console.log("Sending request to /api/music-suggestions")
       const musicResponse = await fetch(`${process.env.NEXT_PUBLIC_INSTAGRAM_CAPTION_URL}/api/music-suggestions`, {
         method: "POST",
         headers: {
@@ -153,17 +172,28 @@ export default function InstagramCaptionPage() {
           vibe: selectedVibe,
           language: songLanguage,
         }),
-        credentials: "include", // Include cookies in the request
+        credentials: "include",
       })
 
+      console.log("Music response headers:", Object.fromEntries(musicResponse.headers.entries()))
+
       if (!musicResponse.ok) {
-        const errorData = await musicResponse.json().catch(() => ({}))
-        console.error("Music suggestion error:", {
-          status: musicResponse.status,
-          statusText: musicResponse.statusText,
-          error: errorData.error || "No error message provided",
-        })
-        throw new Error(errorData.error || `HTTP error! status: ${musicResponse.status}`)
+        let errorMessage = "Unknown error"
+        try {
+          const errorData = await musicResponse.json()
+          errorMessage = errorData.error || `HTTP error! status: ${musicResponse.status}`
+          console.error("Music suggestion error:", {
+            status: musicResponse.status,
+            statusText: musicResponse.statusText,
+            error: errorData.error || "No error message provided",
+            response: errorData,
+            headers: Object.fromEntries(musicResponse.headers.entries()),
+          })
+        } catch (e) {
+          console.error("Failed to parse music response:", e)
+          errorMessage = `HTTP error! status: ${musicResponse.status}`
+        }
+        throw new Error(errorMessage)
       }
 
       const musicData = await musicResponse.json()
@@ -171,18 +201,20 @@ export default function InstagramCaptionPage() {
         throw new Error(musicData.error)
       }
 
+      console.log("Music response:", musicData)
       setMusicSuggestions(musicData.musicSuggestions || [])
       setShowMusicSuggestions(true)
 
       toast({
-        title: "Captions generated!",
-        description: "Your Instagram captions and music suggestions are ready.",
+        title: "Success",
+        description: "Your Instagram captions and music suggestions are ready!",
       })
     } catch (error) {
       console.error("Generation error:", error)
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
       toast({
         title: "Error",
-        description: `Failed to generate captions: ${error instanceof Error ? error.message : "Unknown error"}`,
+        description: `Failed to generate captions or music suggestions: ${errorMessage}. Please try logging in again or check your network.`,
         variant: "destructive",
       })
     } finally {
