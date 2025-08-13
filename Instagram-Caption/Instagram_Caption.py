@@ -26,7 +26,7 @@ app = Flask(__name__)
 # Configure CORS to allow requests from frontend
 CORS(app, supports_credentials=True, resources={
     r"/api/*": {
-        "origins": ["http://localhost:3000","https://aiverse-icip.onrender.com"],
+        "origins": ["https://aiverse-two.vercel.app", "http://localhost:3000"],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "expose_headers": ["Content-Type"],
