@@ -145,11 +145,6 @@ Content-Type: application/json
 
 ---
 
-
-## 📡 API Usage
-
----
-
 ### **Instagram Caption Service**
 
 #### Generate Captions
