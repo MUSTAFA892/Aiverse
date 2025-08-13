@@ -71,7 +71,7 @@ export default function VoiceCloningPage() {
           formData.append("voice", blob, "voice-sample.wav")
 
           console.log("Uploading voice sample to /upload...")
-          const response = await fetch("http://127.0.0.1:5000/upload", {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_VOICE_CLONING_URL}/upload`, {
             method: "POST",
             body: formData,
             signal: AbortSignal.timeout(10000),
@@ -165,7 +165,7 @@ export default function VoiceCloningPage() {
         language: "en",
         voice_path: voiceFilePath,
       })
-      const response = await fetch("http://127.0.0.1:5000/generate", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_VOICE_CLONING_URL}/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
