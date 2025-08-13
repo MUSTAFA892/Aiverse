@@ -1,3 +1,5 @@
 venv/
 
 .env
+
+Voice_Cloning/Uploads/
