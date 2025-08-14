@@ -18,9 +18,9 @@ import { useAuth } from "@/contexts/auth-context"
 const navItems = [
   { name: "Home", href: "/" },
   { name: "Tools", href: "/tools" },
-  { name: "Pricing", href: "/pricing" },
   { name: "About", href: "/about" },
   { name: "Contact", href: "/contact" },
+  {/*  { name: "Pricing", href: "/pricing" },*/}
 ]
 
 export default function Navbar() {
