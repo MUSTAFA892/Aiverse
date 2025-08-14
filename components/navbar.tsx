@@ -20,9 +20,8 @@ const navItems = [
   { name: "Tools", href: "/tools" },
   { name: "About", href: "/about" },
   { name: "Contact", href: "/contact" },
-  {/*  { name: "Pricing", href: "/pricing" },*/}
 ]
-
+{/*{ name: "Pricing", href: "/pricing" }*/}
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
