@@ -145,7 +145,7 @@ export default function HomePage() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="flex flex-col sm:flex-row gap-6 justify-center mb-16"
           >
-            <Link href="/auth/register">
+            <Link href="/tools">
               <Button
                 size="lg"
                 className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-10 py-4 rounded-2xl text-lg font-semibold shadow-2xl shadow-teal-500/25 hover:shadow-teal-500/40 transition-all duration-300 transform hover:scale-105"
